@@ -29,5 +29,5 @@ public class RemoteFeedLoader{
 }
 
 public protocol HTTPClient{
-    func getURL(from url: URL, completionHandeler: (Error) -> Void)
+    func getURL(from url: URL, completionHandeler: @escaping (Error) -> Void)
 }
