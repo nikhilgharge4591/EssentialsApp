@@ -21,10 +21,19 @@ class RemoteFeedLoaderClass: XCTestCase {
     func test_load_requestsDataFromURL(){
         let url = URL(string:"https://www.algoexpert.io/data-structures")!
         let (sut, client) = makeSUT(withURL:url)
-        sut.load()
+        sut.load{ error in
+            
+        }
         XCTAssertNotNil(client.requestedURL)
     }
     
+    func test_load_deliversErrorOnClientError(){
+        let url = URL(string:"https://www.algoexpert.io/data-structures")!
+        let (sut, _) = makeSUT(withURL:url)
+        var captureError: RemoteFeedLoader.Error?
+        sut.load{error in captureError = error}
+        XCTAssertEqual(captureError, .connectivity)
+    }
     
     // MARK:- Helpers
     
@@ -37,12 +46,16 @@ class RemoteFeedLoaderClass: XCTestCase {
     class HTTPClientSpy: HTTPClient{
         
         var requestedURL: URL?
+        var error:Error?
         
-        func getURL(from url: URL){
+        func getURL(from url: URL, completionHandeler: (Error) -> Void) {
+            if let error = error{
+                completionHandeler(error)
+            }
             requestedURL = url
+
         }
-        
-        
+
     }
     
 }
