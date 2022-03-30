@@ -25,33 +25,43 @@ protocol HTTPClient{
     func getURL(from url: URL)
 }
 
-class HTTPClientSpy: HTTPClient{
-    
-    func getURL(from url: URL){
-        requestedURL = url
-    }
-    
-    var requestedURL: URL?
-    
-}
+
 
 class RemoteFeedLoaderClass: XCTestCase {
 
     func test_init_testDoesNotRequestDataFromURL(){
         let url = URL(string:"https://www.algoexpert.io/data-structures")!
-        let client = HTTPClientSpy()
-        _ = RemoteFeedLoader(withClient:client, andURL:url)
+        let (_, client)  = makeSUT(withURL:url)
         XCTAssertNil(client.requestedURL)
     }
     
     func test_load_requestDataFromURL(){
         let url = URL(string:"https://www.algoexpert.io/data-structures")!
-        let client = HTTPClientSpy()
-        let sut = RemoteFeedLoader(withClient: client, andURL:url)
+        let (sut, client) = makeSUT(withURL:url)
         
         sut.load()
         
         XCTAssertNotNil(client.requestedURL)
+    }
+    
+    
+    // MARK:- Helpers
+    
+    private func makeSUT(withURL: URL) -> (sut:RemoteFeedLoader, HTTPClient: HTTPClientSpy){
+        let client = HTTPClientSpy()
+        let sut = RemoteFeedLoader(withClient: client, andURL:withURL)
+        return (sut, client)
+    }
+    
+    class HTTPClientSpy: HTTPClient{
+        
+        var requestedURL: URL?
+        
+        func getURL(from url: URL){
+            requestedURL = url
+        }
+        
+        
     }
     
 }
