@@ -51,12 +51,20 @@
 		1715AEB227F47054004C1342 /* EssentialFeed */ = {
 			isa = PBXGroup;
 			children = (
-				1715AEBC27F470D1004C1342 /* FeedItem.swift */,
-				1715AEBE27F47238004C1342 /* FeedLoader.swift */,
+				1715AEC027F4737A004C1342 /* FeedFeature */,
 				1715AEB327F47054004C1342 /* EssentialFeed.h */,
 				1715AEB427F47054004C1342 /* EssentialFeed.docc */,
 			);
 			path = EssentialFeed;
+			sourceTree = "<group>";
+		};
+		1715AEC027F4737A004C1342 /* FeedFeature */ = {
+			isa = PBXGroup;
+			children = (
+				1715AEBE27F47238004C1342 /* FeedLoader.swift */,
+				1715AEBC27F470D1004C1342 /* FeedItem.swift */,
+			);
+			path = FeedFeature;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
