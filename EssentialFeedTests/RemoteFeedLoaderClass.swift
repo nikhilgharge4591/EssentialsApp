@@ -61,6 +61,21 @@ class RemoteFeedLoaderClass: XCTestCase {
             client.complete(withStatusCode:code, at: index)
             XCTAssertEqual(captureError, [.invalidData])
         }
+        
+        func test_load_deliversErrorOn200HTTPResponsewithInvalidJSON(){
+            let url = URL(string:"https://www.algoexpert.io/data-structures")!
+            let (sut, client) = makeSUT(withURL:url)
+            
+            var capturedError = [RemoteFeedLoader.Error]()
+            
+            sut.load{
+                capturedError.append($0)
+            }
+            let invalidJSON = Data(bytes:"invalid json".utf8)
+            client.complete(withStatusCode:200, data: invalidJSON)
+            XCTAssertEqual(capturedError,[.invalidData])
+            
+        }
     }
     
     // MARK:- Helpers
@@ -86,10 +101,10 @@ class RemoteFeedLoaderClass: XCTestCase {
             messages[index].completion(.failure(error))
         }
         
-        func complete(withStatusCode: Int, at index:Int = 0){
+        func complete(withStatusCode: Int, data: Data = Data(), at index:Int = 0){
             guard let responseURL = requestedURL else{return}
             let response = HTTPURLResponse(url:responseURL, statusCode:withStatusCode, httpVersion: nil, headerFields: nil)!
-            messages[index].completion(.success(response))
+            messages[index].completion(.success(data, response))
         }
     }
     
