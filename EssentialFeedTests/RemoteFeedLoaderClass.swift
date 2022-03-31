@@ -30,27 +30,8 @@ class RemoteFeedLoaderClass: XCTestCase {
     func test_load_deliversErrorOnClientError(){
         let url = URL(string:"https://www.algoexpert.io/data-structures")!
         let (sut, client) = makeSUT(withURL:url)
-        var captureError =  [RemoteFeedLoader.Error]()
         
-        sut.load{
-            
-            captureError.append($0)
-            
-        }
-        
-        let clientError = NSError(domain:"Test", code: 0)
-        client.complete(withError:clientError)
-        
-        XCTAssertEqual(captureError, [.connectivity])
-    }
-    
-    func test_load_deliversErrorOnNon200HTTPResponse(){
-        let url = URL(string:"https://www.algoexpert.io/data-structures")!
-        let (sut, client) = makeSUT(withURL:url)
-        let samples = [199, 201, 300, 400, 500]
-        
-        samples.enumerated().forEach { index, code in
-            
+        expect(sut, withHTTPClientSpy: client) {
             var captureError =  [RemoteFeedLoader.Error]()
             
             sut.load{
@@ -58,25 +39,43 @@ class RemoteFeedLoaderClass: XCTestCase {
                 captureError.append($0)
                 
             }
-            client.complete(withStatusCode:code, at: index)
-            XCTAssertEqual(captureError, [.invalidData])
+            
+            let clientError = NSError(domain:"Test", code: 0)
+            client.complete(withError:clientError)
+        }   
+    }
+    
+    func test_load_deliversErrorOnNon200HTTPResponse(){
+        let url = URL(string:"https://www.algoexpert.io/data-structures")!
+        let (sut, client) = makeSUT(withURL:url)
+        let samples = [199, 201, 300, 400, 500]
+        
+        expect(sut, withHTTPClientSpy:client) {
+            samples.enumerated().forEach { index, code in
+                
+                var captureError =  [RemoteFeedLoader.Error]()
+                
+                sut.load{
+                    
+                    captureError.append($0)
+                    
+                }
+                client.complete(withStatusCode:code, at: index)
+            }
         }
         
-        func test_load_deliversErrorOn200HTTPResponsewithInvalidJSON(){
-            let url = URL(string:"https://www.algoexpert.io/data-structures")!
-            let (sut, client) = makeSUT(withURL:url)
+    }
+        
+    func test_load_deliversErrorOn200HTTPResponsewithInvalidJSON(){
             
-            var capturedError = [RemoteFeedLoader.Error]()
-            
-            sut.load{
-                capturedError.append($0)
-            }
-            let invalidJSON = Data(bytes:"invalid json".utf8)
-            client.complete(withStatusCode:200, data: invalidJSON)
-            XCTAssertEqual(capturedError,[.invalidData])
-            
+        let url = URL(string:"https://www.algoexpert.io/data-structures")!
+        let (sut, client) = makeSUT(withURL:url)
+        expect(sut, withHTTPClientSpy: client) {
+                let invalidJSON = Data(bytes:"invalid json".utf8)
+                client.complete(withStatusCode:200, data: invalidJSON)
         }
     }
+}
     
     // MARK:- Helpers
     
@@ -84,6 +83,16 @@ class RemoteFeedLoaderClass: XCTestCase {
         let client = HTTPClientSpy()
         let sut = RemoteFeedLoader(withClient: client, andURL:withURL)
         return (sut, client)
+    }
+    
+    private func expect(_ sut:RemoteFeedLoader, withHTTPClientSpy: HTTPClientSpy, when action: () -> Void){
+        
+        var capturedError = [RemoteFeedLoader.Error]()
+        sut.load{
+            capturedError.append($0)
+        }
+        action()
+        XCTAssertEqual(capturedError,[.invalidData])
     }
     
     class HTTPClientSpy: HTTPClient{
@@ -108,4 +117,4 @@ class RemoteFeedLoaderClass: XCTestCase {
         }
     }
     
-}
+
