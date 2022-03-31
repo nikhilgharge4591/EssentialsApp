@@ -44,6 +44,25 @@ class RemoteFeedLoaderClass: XCTestCase {
         XCTAssertEqual(captureError, [.connectivity])
     }
     
+    func test_load_deliversErrorOnNon200HTTPResponse(){
+        let url = URL(string:"https://www.algoexpert.io/data-structures")!
+        let (sut, client) = makeSUT(withURL:url)
+        let samples = [199, 201, 300, 400, 500]
+        
+        samples.enumerated().forEach { index, code in
+            
+            var captureError =  [RemoteFeedLoader.Error]()
+            
+            sut.load{
+                
+                captureError.append($0)
+                
+            }
+            client.complete(withStatusCode:code, at: index)
+            XCTAssertEqual(captureError, [.invalidData])
+        }
+    }
+    
     // MARK:- Helpers
     
     private func makeSUT(withURL: URL) -> (sut:RemoteFeedLoader, HTTPClient: HTTPClientSpy){
@@ -56,15 +75,21 @@ class RemoteFeedLoaderClass: XCTestCase {
         
         var requestedURL: URL?
         
-        private var messages = [(url:URL, completion: (Error) -> Void)]()
+        private var messages = [(url:URL, completion: (HTTPClientResult) -> Void)]()
         
-        func getURL(from url: URL, completionHandeler: @escaping (Error) -> Void) {
-            messages.append((url,completionHandeler))
+        func getURL(from url: URL, completionHandeler: @escaping (HTTPClientResult) -> Void) {
+            messages.append((url, completionHandeler))
             requestedURL = url
         }
         
         func complete(withError error:Error, at index:Int = 0){
-            messages[index].completion(error)
+            messages[index].completion(.failure(error))
+        }
+        
+        func complete(withStatusCode: Int, at index:Int = 0){
+            guard let responseURL = requestedURL else{return}
+            let response = HTTPURLResponse(url:responseURL, statusCode:withStatusCode, httpVersion: nil, headerFields: nil)!
+            messages[index].completion(.success(response))
         }
     }
     
